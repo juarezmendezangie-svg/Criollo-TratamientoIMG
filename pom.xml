@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.mycompany</groupId>
-    <artifactId>mavenproject1</artifactId>
+    <groupId>com.criollo.omr</groupId>
+    <artifactId>corrector-omr</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -16,29 +16,50 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <exec.mainClass>com.mycompany.mavenproject1.Main</exec.mainClass>
+        <exec.mainClass>com.criollo.omr.Main</exec.mainClass>
     </properties>
 
     <dependencies>
 
-        <!-- ===================================================== -->
-        <!-- OpenCV para Java: Incluye las DLL de Windows nativas   -->
-        <!-- Maven lo descarga TODO automáticamente                  -->
-        <!-- ===================================================== -->
+        <!-- OpenCV -->
         <dependency>
             <groupId>org.openpnp</groupId>
             <artifactId>opencv</artifactId>
             <version>4.7.0-0</version>
         </dependency>
 
-        <!-- ===================================================== -->
-        <!-- Cargador automático de la librería nativa de OpenCV    -->
-        <!-- Evita errores de "no se encontró opencv_java.dll"      -->
-        <!-- ===================================================== -->
+        <!-- H2 Database embebido (NO necesita instalación) -->
         <dependency>
-            <groupId>org.openpnp</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.7.0-0</version>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
+
+        <!-- Apache PDFBox (exportación PDF) -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
+        <!-- SLF4J (logging) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.13</version>
+        </dependency>
+
+        <!-- JUnit 5 (testing) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -57,6 +78,16 @@
                 </configuration>
             </plugin>
 
+            <!-- Ejecutor con soporte Java 21 (native access para OpenCV) -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <mainClass>com.criollo.omr.Main</mainClass>
+                </configuration>
+            </plugin>
+
             <!-- Empaquetador: Genera un JAR ejecutable con todo incluido -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -69,7 +100,10 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.mycompany.mavenproject1.Main</mainClass>
+                                    <mainClass>com.criollo.omr.Main</mainClass>
+                                    <manifestEntries>
+                                        <Multi-Release>true</Multi-Release>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                         </configuration>

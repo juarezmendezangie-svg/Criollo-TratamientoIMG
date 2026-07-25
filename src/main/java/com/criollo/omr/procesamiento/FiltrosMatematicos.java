@@ -243,7 +243,7 @@ public class FiltrosMatematicos {
             claheMat = new Mat();
             clahe.apply(gris, claheMat);
             otsuFill = new Mat();
-            Imgproc.threshold(claheMat, otsuFill, 0, 255, Imgproc.THRESH_BINARY_INV | Imgproc.THRESH_OTSU);
+            Imgproc.threshold(claheMat, otsuFill, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
 
             Mat r1 = new Mat(); otsuCont.copyTo(r1);
             Mat r2 = new Mat(); otsuFill.copyTo(r2);

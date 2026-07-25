@@ -110,7 +110,7 @@ public class OrganizadorPreguntas {
                 // CLA (Cross-Linear Area) con máscara circular interna (Sección 7)
                 // Excluye el borde impreso, solo mide grafito interior
                 int bestO = -1, secondO = -1;
-                int bestCnt = -1, secondCnt = -1;
+                int bestCnt = Integer.MAX_VALUE, secondCnt = Integer.MAX_VALUE;
                 int innerR = 5; // radio interno (70% del radio real ~7px)
 
                 for (int o = 0; o < opc; o++) {
@@ -141,11 +141,11 @@ public class OrganizadorPreguntas {
                     maskedRoi.release();
                     mask.release();
                     
-                    if (fillRatio > bestCnt) { 
+                    if (fillRatio < bestCnt) { 
                         secondCnt = bestCnt; secondO = bestO; 
                         bestCnt = fillRatio; bestO = o; 
                     }
-                    else if (fillRatio > secondCnt) { 
+                    else if (fillRatio < secondCnt) { 
                         secondCnt = fillRatio; secondO = o; 
                     }
                 }

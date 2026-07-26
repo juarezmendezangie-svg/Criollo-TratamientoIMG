@@ -49,7 +49,7 @@ public class OrganizadorPreguntas {
         cols.removeIf(c -> c.size() < ex.size() / (nCols * 3));
         log.info("Columnas: {}", cols.size());
 
-        // Filas por gaps (limitadas a 25)
+        // Filas por gaps (100% detección)
         List<List<List<Burbuja>>> allRows = new ArrayList<>();
         for (var col : cols) {
             col.sort(Comparator.comparingDouble(b -> b.centro().y));
@@ -80,9 +80,9 @@ public class OrganizadorPreguntas {
         Map<Integer, Character> resp = new TreeMap<>();
         for (int ci = 0; ci < cols.size(); ci++) {
             var rows = allRows.get(ci);
-            int maxR = Math.min(rows.size(), ROWS);
-            for (int ri = 0; ri < maxR; ri++) {
+            for (int ri = 0; ri < ROWS; ri++) {
                 var row = rows.get(ri);
+                if (row.isEmpty()) continue;
                 int qNum = ci * ROWS + ri + 1;
                 row.sort(Comparator.comparingDouble(b -> b.centro().x));
                 int bestI = -1;

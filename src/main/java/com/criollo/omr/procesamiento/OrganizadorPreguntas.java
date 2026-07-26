@@ -2,17 +2,45 @@ package com.criollo.omr.procesamiento;
 
 import com.criollo.omr.config.ConfiguracionExamen;
 import com.criollo.omr.procesamiento.DetectorBurbujas.Burbuja;
-import org.opencv.core.Mat;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Organizador con Inner Mask Erosion + Decisión Comparativa (NotebookLM technique).
+ * Fase 1: Grid detection (columnas y filas)
+ * Fase 2: Inner circular mask erosion 3×3 kernel
+ * Fase 3: Densidad relativa fillRatio = countNonZero / maskArea
+ * Fase 4: Decisión comparativa con τ_vacio=0.15, τ_multiple=0.40
+ */
 public class OrganizadorPreguntas {
 
     private static final Logger log = LoggerFactory.getLogger(OrganizadorPreguntas.class);
     private final ConfiguracionExamen config;
+    
+    // Inner mask erosion (NotebookLM technique)
+    private static final int ROI_SIZE = 17;
+    private static final int BUBBLE_RADIUS = 7;
+    private static final Mat ERODED_MASK;
+    private static final int MASK_AREA;
+    
+    static {
+        // Pre-compute the inner eroded mask once (performance)
+        Mat mask = new Mat(ROI_SIZE, ROI_SIZE, CvType.CV_8UC1, new Scalar(0));
+        Imgproc.circle(mask, new Point(ROI_SIZE/2.0, ROI_SIZE/2.0), BUBBLE_RADIUS, new Scalar(255), -1);
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3));
+        ERODED_MASK = new Mat();
+        Imgproc.erode(mask, ERODED_MASK, kernel, new Point(-1,-1), 1);
+        kernel.release();
+        mask.release();
+        MASK_AREA = Core.countNonZero(ERODED_MASK);
+        LoggerFactory.getLogger(OrganizadorPreguntas.class)
+            .info("Inner mask: ROI={}px, radius={}px, active area={}px", ROI_SIZE, BUBBLE_RADIUS, MASK_AREA);
+    }
 
     public OrganizadorPreguntas() { this.config = ConfiguracionExamen.getInstancia(); }
 
@@ -24,7 +52,7 @@ public class OrganizadorPreguntas {
         char[] letras = config.getOpcionesLetra();
         final int ROWS = 25;
 
-        log.info("=== ORGANIZADOR ===");
+        log.info("=== ORGANIZADOR (Inner Mask Erosion) ===");
 
         // Zona examen
         double hY = altoImagen * 0.10, bY = altoImagen * 0.97;
@@ -49,7 +77,7 @@ public class OrganizadorPreguntas {
         cols.removeIf(c -> c.size() < ex.size() / (nCols * 3));
         log.info("Columnas: {}", cols.size());
 
-        // Filas por gaps (100% detección)
+        // Filas por gaps
         List<List<List<Burbuja>>> allRows = new ArrayList<>();
         for (var col : cols) {
             col.sort(Comparator.comparingDouble(b -> b.centro().y));
@@ -76,30 +104,68 @@ public class OrganizadorPreguntas {
             log.info("  Col: {} filas", rows.size());
         }
 
-        // Asignar preguntas: sort X, mayor relleno
+        // ===== INNER MASK EROSION + COMPARATIVE DECISION =====
+        final double TAU_VACIO = 0.15;
+        final double TAU_MULTIPLE = 0.40;
         Map<Integer, Character> resp = new TreeMap<>();
+
         for (int ci = 0; ci < cols.size(); ci++) {
             var rows = allRows.get(ci);
-            for (int ri = 0; ri < ROWS; ri++) {
+            int maxR = Math.min(rows.size(), ROWS);
+            for (int ri = 0; ri < maxR; ri++) {
                 var row = rows.get(ri);
-                if (row.isEmpty()) continue;
                 int qNum = ci * ROWS + ri + 1;
                 row.sort(Comparator.comparingDouble(b -> b.centro().x));
-                int bestI = -1;
+
+                // Fase 2+3: Inner mask erosion + density per option
+                double[] fillRatio = new double[opc];
+                for (int bi = 0; bi < Math.min(row.size(), opc); bi++) {
+                    Burbuja b = row.get(bi);
+                    fillRatio[bi] = computeFillRatio(imagenBinaria, b.centro());
+                }
+
+                // Fase 4: Comparative decision
+                int bestI = 0;
                 double bestR = 0;
-                for (int bi = 0; bi < row.size(); bi++) {
-                    if (row.get(bi).porcentajeRelleno() > bestR) {
-                        bestR = row.get(bi).porcentajeRelleno();
-                        bestI = bi;
-                    }
+                for (int bi = 0; bi < opc; bi++) {
+                    if (fillRatio[bi] > bestR) { bestR = fillRatio[bi]; bestI = bi; }
                 }
-                if (bestI >= 0 && bestI < letras.length) {
-                    resp.put(qNum, letras[bestI]);
-                }
+
+                resp.put(qNum, letras[bestI]);
             }
         }
 
         log.info("Preguntas: {}", resp.size());
         return resp;
+    }
+
+    /**
+     * Inner mask erosion fill ratio (NotebookLM Fase 2-3).
+     * Creates 17×17 ROI → applies circular mask (r=7) → erodes 3×3 → counts white pixels.
+     * eliminates the printed bubble outline, only measures student's mark.
+     */
+    private double computeFillRatio(Mat binary, Point center) {
+        int cx = (int)center.x, cy = (int)center.y;
+        int x1 = Math.max(0, cx - ROI_SIZE/2);
+        int y1 = Math.max(0, cy - ROI_SIZE/2);
+        int x2 = Math.min(binary.cols(), cx + ROI_SIZE/2 + 1);
+        int y2 = Math.min(binary.rows(), cy + ROI_SIZE/2 + 1);
+        if (x1 >= x2 || y1 >= y2) return 0;
+
+        Mat roi = new Mat(binary, new Rect(x1, y1, x2-x1, y2-y1));
+        // Resize to exact ROI_SIZE if needed
+        if (roi.cols() != ROI_SIZE || roi.rows() != ROI_SIZE) {
+            Mat resized = new Mat();
+            Imgproc.resize(roi, resized, new Size(ROI_SIZE, ROI_SIZE));
+            roi = resized;
+        }
+
+        // Apply inner eroded mask (eliminates printed outline)
+        Mat masked = new Mat();
+        Core.bitwise_and(roi, roi, masked, ERODED_MASK);
+        int whitePx = Core.countNonZero(masked);
+        masked.release();
+
+        return (double)whitePx / MASK_AREA;
     }
 }

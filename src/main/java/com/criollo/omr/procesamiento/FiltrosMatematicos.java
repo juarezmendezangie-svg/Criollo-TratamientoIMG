@@ -62,20 +62,35 @@ public class FiltrosMatematicos {
         return r;
     }
 
-    // PIPELINE: Gris → EqualizeHist → Otsu
+    // PIPELINE DUAL:
+    // [0] EqualizeHist+Otsu → contornos (100% grid detection)
+    // [1] Adaptive BINARY_INV → inner mask fill (sin sesgo)
+    // [2] Grises original
     public Mat[] procesarExamen(Mat imagenOriginal) {
-        Mat gris = null, eq = null, otsu = null;
+        Mat gris = null, eq = null, otsu = null, adaptive = null;
         try {
             gris = convertirAGrises(imagenOriginal);
+            
+            // Otsu para contornos
             eq = ecualizarHistograma(gris);
-            otsu = binarizar(eq);
+            otsu = new Mat();
+            Imgproc.threshold(eq, otsu, 0, 255, Imgproc.THRESH_BINARY | Imgproc.THRESH_OTSU);
+            
+            // Adaptive para relleno (BINARY_INV: filled=WHITE)
+            adaptive = new Mat();
+            Imgproc.adaptiveThreshold(gris, adaptive, 255,
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                Imgproc.THRESH_BINARY_INV, 15, 5);
+            
             Mat r1 = new Mat(); otsu.copyTo(r1);
-            Mat r2 = new Mat(); gris.copyTo(r2);
-            return new Mat[]{r1, r2};
+            Mat r2 = new Mat(); adaptive.copyTo(r2);
+            Mat r3 = new Mat(); gris.copyTo(r3);
+            return new Mat[]{r1, r2, r3};
         } finally {
             if (gris != null) gris.release();
             if (eq != null) eq.release();
             if (otsu != null) otsu.release();
+            if (adaptive != null) adaptive.release();
         }
     }
 }

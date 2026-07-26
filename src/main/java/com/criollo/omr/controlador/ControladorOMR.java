@@ -62,11 +62,11 @@ public class ControladorOMR {
 
         try {
             Mat[] resultados = procesarImagenCompleta(imgPlantilla);
-            Mat plantillaOtsu = resultados[0];       // Equalize+Otsu → contornos
-            Mat plantillaCLAHE = resultados[1];      // CLAHE+Otsu → relleno (sin sesgo)
-            Map<Integer, Character> respuestasPlantilla = extractor.extraerRespuestas(plantillaOtsu, plantillaCLAHE);
+            Mat plantillaOtsu = resultados[0];
+            Mat plantillaAdaptive = resultados[1];
+            Map<Integer, Character> respuestasPlantilla = extractor.extraerRespuestas(plantillaOtsu, plantillaAdaptive);
             plantillaOtsu.release();
-            plantillaCLAHE.release();
+            plantillaAdaptive.release();
 
             // Registrar respuestas correctas
             plantilla.setPlantillaCargada(false);
@@ -90,10 +90,10 @@ public class ControladorOMR {
         try {
             Mat[] resultados = procesarImagenCompleta(imgAlumno);
             Mat alumnoOtsu = resultados[0];
-            Mat alumnoCLAHE = resultados[1];
-            Map<Integer, Character> respuestasAlumno = extractor.extraerRespuestas(alumnoOtsu, alumnoCLAHE);
+            Mat alumnoAdaptive = resultados[1];
+            Map<Integer, Character> respuestasAlumno = extractor.extraerRespuestas(alumnoOtsu, alumnoAdaptive);
             alumnoOtsu.release();
-            alumnoCLAHE.release();
+            alumnoAdaptive.release();
 
             resultado.setRespuestasDetectadas(respuestasAlumno);
 

@@ -22,7 +22,8 @@ public class FiltrosMatematicos {
 
     public Mat ecualizarHistograma(Mat imagenGris) {
         Mat resultado = new Mat();
-        Imgproc.equalizeHist(imagenGris, resultado);
+        // Reemplazado equalizeHist por GaussianBlur leve para evitar ruido granulado y sesgo horizontal
+        Imgproc.GaussianBlur(imagenGris, resultado, new Size(5, 5), 0);
         return resultado;
     }
 

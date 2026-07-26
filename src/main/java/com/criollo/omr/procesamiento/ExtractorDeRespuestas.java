@@ -39,6 +39,10 @@ public class ExtractorDeRespuestas {
      * @return Map<NumeroPregunta, LetraDetectada>
      */
     public Map<Integer, Character> extraerRespuestas(Mat imagenBinaria, Mat imagenGrises) {
+        return extraerRespuestas(imagenBinaria, imagenGrises, false);
+    }
+
+    public Map<Integer, Character> extraerRespuestas(Mat imagenBinaria, Mat imagenGrises, boolean esPlantilla) {
         if (imagenBinaria == null || imagenBinaria.empty()) {
             log.warn("Imagen procesada nula o vacía, no se pueden extraer respuestas");
             return java.util.Collections.emptyMap();
@@ -52,9 +56,9 @@ public class ExtractorDeRespuestas {
 
         // Paso 2: Organizar usando Otsu para grid + Adaptive para relleno + Grises
         Map<Integer, Character> respuestas = organizador.organizar(
-            burbujas, imagenBinaria, imagenGrises, imagenBinaria.cols(), imagenBinaria.rows());
+            burbujas, imagenBinaria, imagenGrises, imagenBinaria.cols(), imagenBinaria.rows(), esPlantilla);
 
-        log.info("Respuestas extraídas: {}", respuestas);
+        log.info("Respuestas extraídas (esPlantilla={}): {}", esPlantilla, respuestas);
         return respuestas;
     }
 }

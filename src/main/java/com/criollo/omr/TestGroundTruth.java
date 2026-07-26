@@ -21,7 +21,7 @@ public class TestGroundTruth {
         test("img/RESPUESTAS-100PR.png", "img/ALUMNO-100PR.png",
              "img/RESPUESTAS-100PR.md", "100PR", ctrl);
         System.out.println();
-        test("img/RESPUESTAS-50PR.png", "img/ALUMNO-50PR.png",
+        test("img/RESPUESTAS-50PR..png", "img/ALUMNO-50PR.png",
              "img/RESPUESTAS-50PR..md", "50PR", ctrl);
     }
 
@@ -35,8 +35,11 @@ public class TestGroundTruth {
         List<String> lines = Files.readAllLines(Path.of(truthPath));
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (!line.isEmpty() && line.length() == 1) {
-                truth.put(i + 1, line.charAt(0));
+            if (!line.isEmpty()) {
+                char ans = line.charAt(line.length() - 1);
+                if (ans >= 'A' && ans <= 'Z') {
+                    truth.put(i + 1, ans);
+                }
             }
         }
         System.out.println("Ground truth: " + truth.size() + " respuestas");
@@ -84,10 +87,18 @@ public class TestGroundTruth {
         // las respuestas del alumno contra la plantilla del sistema)
         int aciertos = 0;
         int respondidas = 0;
+        System.out.println("\nDiscrepancias Alumno vs Plantilla (primeras 15):");
+        int shownAlumno = 0;
         for (int i = 1; i <= truth.size(); i++) {
             char a = sysAlumno.getOrDefault(i, 'X');
+            char p = sysPlantilla.getOrDefault(i, '?');
             if (a != 'X') respondidas++;
-            if (sysPlantilla.containsKey(i) && a == sysPlantilla.get(i)) aciertos++;
+            if (p != '?' && a == p) {
+                aciertos++;
+            } else if (shownAlumno < 15) {
+                System.out.printf("  Alumno P%02d: Alumno=%c, Plantilla=%c%n", i, a, p);
+                shownAlumno++;
+            }
         }
         System.out.printf("%nAlumno: %d/%d respondidas, %d/%d aciertos (%.0f%%)%n",
             respondidas, truth.size(), aciertos, truth.size(),

@@ -64,7 +64,7 @@ public class ControladorOMR {
             Mat[] resultados = procesarImagenCompleta(imgPlantilla);
             Mat plantillaOtsu = resultados[0];
             Mat plantillaAdaptive = resultados[1];
-            Map<Integer, Character> respuestasPlantilla = extractor.extraerRespuestas(plantillaOtsu, plantillaAdaptive);
+            Map<Integer, Character> respuestasPlantilla = extractor.extraerRespuestas(plantillaOtsu, plantillaAdaptive, true);
             plantillaOtsu.release();
             plantillaAdaptive.release();
 
@@ -91,7 +91,7 @@ public class ControladorOMR {
             Mat[] resultados = procesarImagenCompleta(imgAlumno);
             Mat alumnoOtsu = resultados[0];
             Mat alumnoAdaptive = resultados[1];
-            Map<Integer, Character> respuestasAlumno = extractor.extraerRespuestas(alumnoOtsu, alumnoAdaptive);
+            Map<Integer, Character> respuestasAlumno = extractor.extraerRespuestas(alumnoOtsu, alumnoAdaptive, false);
             alumnoOtsu.release();
             alumnoAdaptive.release();
 

@@ -1,102 +1,100 @@
-# ALUMNO-100PR
-
 1. A
 2. D
 3. B
 4. E
 5. C
-6. B
-7. A
+6. A
+7. B
 8. D
 9. C
 10. E
-11. B
-12. (en blanco)
-13. A
+11. A
+12. B
+13. C
 14. D
-15. (en blanco)
-16. C
-17. (en blanco)
-18. (en blanco)
-19. (en blanco)
-20. D
-21. (en blanco)
-22. (en blanco)
-23. C
-24. (en blanco)
-25. D
-26. C
-27. (en blanco)
-28. E
-29. A
-30. D
-31. (en blanco)
+15. x
+16. B
+17. D
+18. C
+19. A
+20. E
+21. A
+22. C
+23. B
+24. D
+25. E
+26. E
+27. A
+28. D
+29. C
+30. A
+31. D
 32. B
-33. C
-34. (en blanco)
+33. E
+34. C
 35. E
-36. B
-37. (en blanco)
-38. D
-39. B
-40. C
-41. (en blanco)
+36. D
+37. B
+38. A
+39. C
+40. E
+41. B
 42. D
 43. A
-44. (en blanco)
+44. C
 45. E
 46. C
-47. (en blanco)
-48. D
-49. A
-50. (en blanco)
-51. B
-52. (en blanco)
-53. E
-54. C
-55. A
-56. (en blanco)
-57. D
-58. B
-59. (en blanco)
-60. E
+47. D
+48. A
+49. B
+50. D
+51. C
+52. E
+53. A
+54. D
+55. B
+56. C
+57. A
+58. E
+59. D
+60. B
 61. A
-62. C
-63. (en blanco)
-64. D
+62. D
+63. C
+64. E
 65. B
-66. (en blanco)
-67. (en blanco)
-68. (en blanco)
-69. D
-70. C
-71. A
-72. C
-73. (en blanco)
-74. D
-75. (en blanco)
-76. (en blanco)
-77. D
-78. A
-79. (en blanco)
-80. E
+66. C
+67. A
+68. D
+69. B
+70. E
+71. D
+72. B
+73. A
+74. C
+75. E
+76. D
+77. B
+78. E
+79. C
+80. A
 81. B
 82. D
-83. (en blanco)
-84. C
+83. C
+84. E
 85. A
-86. (en blanco)
-87. D
-88. B
-89. (en blanco)
-90. C
-91. (en blanco)
-92. C
-93. (en blanco)
-94. (en blanco)
-95. B
-96. D
-97. (en blanco)
-98. C
+86. D
+87. B
+88. C
+89. E
+90. A
+91. C
+92. B
+93. D
+94. E
+95. A
+96. C
+97. D
+98. B
 99. E
-100. B
+100. C

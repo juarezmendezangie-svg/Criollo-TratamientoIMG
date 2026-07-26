@@ -7,12 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-/**
- * Organizador por GRID SPLITTING directo (técnica del video de YouTube).
- * NO detecta burbujas individuales — divide la imagen binarizada en una
- * cuadrícula regular y cuenta píxeles blancos en cada celda.
- * Simple, robusto, funciona con cualquier tamaño de burbuja.
- */
 public class OrganizadorPreguntas {
 
     private static final Logger log = LoggerFactory.getLogger(OrganizadorPreguntas.class);
@@ -20,10 +14,6 @@ public class OrganizadorPreguntas {
 
     public OrganizadorPreguntas() { this.config = ConfiguracionExamen.getInstancia(); }
 
-    /**
-     * Grid splitting: ignora la lista de burbujas, divide la imagen
-     * binarizada directamente en una cuadrícula.
-     */
     public Map<Integer, Character> organizar(List<DetectorBurbujas.Burbuja> burbujas,
             Mat imagenBinaria, Mat imagenGrises, int anchoImagen, int altoImagen) {
 
@@ -32,61 +22,46 @@ public class OrganizadorPreguntas {
         int nCols = burbujas != null && burbujas.size() > 700 ? 4 : 2;
         final int ROWS = 25;
 
-        log.info("=== GRID SPLITTING ({} cols × {} rows) ===", nCols, ROWS);
+        log.info("=== GRID SIMPLE ({} cols, {} rows) ===", nCols, ROWS);
 
-        // Zona examen: excluir 10% superior, 3% bordes
-        int yStart = (int)(altoImagen * 0.10);
-        int yEnd = (int)(altoImagen * 0.97);
-        int xStart = (int)(anchoImagen * 0.03);
-        int xEnd = (int)(anchoImagen * 0.97);
+        // Column centers: 1/8, 3/8, 5/8, 7/8 del ancho
+        double[] colX = new double[nCols];
+        for (int c = 0; c < nCols; c++)
+            colX[c] = anchoImagen * (2*c + 1) / (2.0 * nCols);
 
-        int examH = yEnd - yStart;
-        int examW = xEnd - xStart;
-        double cellH = (double)examH / ROWS;
-        double cellW = (double)examW / (nCols * opc);
+        // Option spacing: ~12px per option (A-E span ~48px)
+        double optSpan = 48;
+        double optStart = -optSpan/2;
 
-        log.info("Grid: cell={}x{}px, exam zone={}x{}px",
-            String.format("%.1f",cellW), String.format("%.1f",cellH), examW, examH);
+        // Rows
+        double yTop = altoImagen * 0.10;
+        double yBot = altoImagen * 0.97;
+        double rowH = (yBot - yTop) / ROWS;
 
+        int sr = 7;
         Map<Integer, Character> resp = new TreeMap<>();
 
         for (int ci = 0; ci < nCols; ci++) {
-            int colStartX = xStart + (int)(ci * examW / nCols);
-            
             for (int ri = 0; ri < ROWS; ri++) {
-                int rowY = yStart + (int)(ri * cellH);
                 int qNum = ci * ROWS + ri + 1;
-
-                // Muestrear las 5 opciones A-E en esta fila+columna
-                int bestO = -1;
-                int bestWhite = -1;
+                double ry = yTop + ri * rowH + rowH/2;
+                int bestO = -1, bestW = -1;
 
                 for (int oi = 0; oi < opc; oi++) {
-                    int optX = colStartX + (int)(oi * cellW);
-                    int x1 = Math.max(0, optX + 2);
-                    int y1 = Math.max(0, rowY + 2);
-                    int x2 = Math.min(imagenBinaria.cols(), optX + (int)cellW - 2);
-                    int y2 = Math.min(imagenBinaria.rows(), rowY + (int)cellH - 2);
-                    
+                    int cx = (int)(colX[ci] + optStart + oi * optSpan/(opc-1));
+                    int cy = (int)ry;
+                    int x1 = Math.max(0, cx-sr), y1 = Math.max(0, cy-sr);
+                    int x2 = Math.min(imagenBinaria.cols(), cx+sr);
+                    int y2 = Math.min(imagenBinaria.rows(), cy+sr);
                     if (x1 >= x2 || y1 >= y2) continue;
-
-                    Rect roi = new Rect(x1, y1, x2 - x1, y2 - y1);
-                    Mat cell = new Mat(imagenBinaria, roi);
-                    int white = Core.countNonZero(cell);
-                    
-                    if (white > bestWhite) {
-                        bestWhite = white;
-                        bestO = oi;
-                    }
+                    int w = Core.countNonZero(new Mat(imagenBinaria, new Rect(x1,y1,x2-x1,y2-y1)));
+                    if (w > bestW) { bestW = w; bestO = oi; }
                 }
-
-                if (bestO >= 0 && bestO < letras.length) {
-                    resp.put(qNum, letras[bestO]);
-                }
+                if (bestO >= 0 && bestO < letras.length) resp.put(qNum, letras[bestO]);
             }
         }
 
-        log.info("Preguntas detectadas: {}", resp.size());
+        log.info("Preguntas: {}", resp.size());
         return resp;
     }
 }
